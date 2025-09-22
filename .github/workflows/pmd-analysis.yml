@@ -1,7 +1,7 @@
 name: PMD Check
 on: 
   pull_request: 
-    branches: [ OrgSource ] # Only run for PRs targeting OrgSource
+    branches: [ dev ] # Only run for PRs targeting OrgSource
 jobs:
   pmd:
     runs-on: ubuntu-latest
