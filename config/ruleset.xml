@@ -6,7 +6,7 @@
     <description>
         Custom ruleset for Apex.
     </description>
-    <rule ref="category/apex/bestpractices.xml/ApexUnitTestClassShouldHaveAsserts" />
-    <rule ref="category/apex/errorprone.xml/AvoidDirectAccessTriggerMap" />
-    <rule ref="category/apex/security.xml/ApexSharingViolations" />
+    <rule ref="category/apex/bestpractices.xml" />
+    <rule ref="category/apex/errorprone.xml" />
+    <rule ref="category/apex/security.xml" />
 </ruleset>
