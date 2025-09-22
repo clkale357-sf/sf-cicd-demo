@@ -7,18 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
-        - uses: actions/checkout@v2
-        - name: Run PMD
-            uses: pmd/pmd-github-action@v2
-            with:
-            rulesets: 'config/ruleset.xml' # Adjust path if your ruleset.xml is elsewhere
-            sourcePath: 'force-app/main/default'
-            version: latest
-            analyzeModifiedFilesOnly: true
-            createGitHubAnnotations: true
-            uploadSarifReport: true 
-        - name: Upload SARIF report
-        if: always() # Upload report even if PMD finds issues
-        uses: github/codeql-action/upload-sarif@v3
+      - uses: actions/checkout@v2
+      - name: Run PMD
+        uses: pmd/pmd-github-action@v2
         with:
-        sarif_file: pmd-report.sarif # Default output file name for SARIF
+          rulesets: 'config/ruleset.xml' # Adjust path if your ruleset.xml is elsewhere
+          sourcePath: 'force-app/main/default'
+          version: latest
+          analyzeModifiedFilesOnly: true
+          createGitHubAnnotations: true
+          uploadSarifReport: false
