@@ -1,2 +1,5 @@
 - name: Run Salesforce Code Analyzer
-  uses: forcedotcom/run-code-analyzer@v2.4.0
+on:
+  pull_request:
+    branches: [ dev ] # Only run for PRs targeting OrgSource
+uses: forcedotcom/run-code-analyzer@v2.4.0
