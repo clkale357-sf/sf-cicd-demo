@@ -14,6 +14,7 @@ public class PMDLoopDemo {
             // PMD will flag this line with the 'AvoidSoqlInLoops' rule.
             // If triggerAccounts contains 100 records, this will execute 100 separate SOQL queries.
             List<Contact> relatedContacts = [SELECT Id, Name FROM Contact WHERE AccountId = :acc.Id];
+            //test
 
             for (Contact con : relatedContacts) {
                 // Some business logic would go here...
