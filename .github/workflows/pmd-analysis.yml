@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Check out files
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       # PREREQUISITES - Only needed if the runner doesn't already satisfy these requirements.
       - name: Ensure node v20.9.0 or greater
@@ -92,7 +94,7 @@ jobs:
           # Generate package.xml for changed components
           sf sgd:source:delta \
             --to $HEAD_BRANCH \
-            --from origin/$BASE_BRANCH \
+            --from $BASE_BRANCH \
             --output-dir delta \
             --generate-delta
 
