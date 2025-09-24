@@ -2,6 +2,9 @@ name: Run Salesforce Code Analyzer
 on:
   pull_request:
     branches: [ dev ] # Only run for PRs targeting OrgSource
+  push:
+    branches:
+      - dev
 jobs:
   salesforce-code-analyzer-workflow:
     permissions:
@@ -122,14 +125,26 @@ jobs:
           echo "Starting validation deployment..."
           
           # Run validation with test execution
-          sf project deploy validate \
+          VALIDATION_RESULT=$(sf project deploy validate \
             --manifest delta/package/package.xml \
             --target-org target-org \
             --test-level RunLocalTests \
             --wait 30 \
-            --json
+            --json)
 
           # Extract the 'id' field from the JSON output & Store the ID as a step output
-          #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
-          #echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
-          #echo "Validation ID: $DEPLOY_ID"
+          DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
+          echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "Validation ID: $DEPLOY_ID"
+          echo "Validation deployment completed."
+
+      # Quick Deploy using Validation ID
+      - name: Deploy to Target Org
+        if: success() && steps.validate_step.outputs.validation_id && github.event_name == 'push'
+        run: |
+          echo "Starting quick deployment using ID: ${{ steps.validate_step.outputs.validation_id }}"
+          sf project deploy quick \
+            --deploy-id ${{ steps.validate_step.outputs.validation_id }} \
+            --target-org target-org \
+            --wait 30 \
+            --verbose
