@@ -103,8 +103,8 @@ jobs:
           echo "Starting deployment"
           sf project deploy start \
             --manifest delta/package/package.xml \
-            --test-level NoTestRun
-            --target-org target-org\
+            --test-level NoTestRun \
+            --target-org target-org \
             --wait 30 \
             --verbose
             echo "Deployment succeeded."
