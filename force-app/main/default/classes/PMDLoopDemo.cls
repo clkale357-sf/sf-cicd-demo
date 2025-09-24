@@ -8,6 +8,8 @@ public with sharing class PMDLoopDemo {
     public static void processRelatedContacts(List<Account> triggerAccounts) {
 
         // This loop iterates over each Account record.
+
+        //dummy update
         for (Account acc : triggerAccounts) {
 
             // BAD PRACTICE: SOQL query inside a for loop.
