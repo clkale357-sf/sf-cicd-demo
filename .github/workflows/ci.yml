@@ -130,7 +130,9 @@ jobs:
             --json --concise
 
           # Extract the 'id' field from the JSON output & Store the ID as a step output
-          #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
-          #echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
-          #echo "Validation ID: $DEPLOY_ID"
-          echo "Validation deployment completed."
+            #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
+            # Store deploy ID in an artifact file
+            #echo "$DEPLOY_ID" > deploy_id.txt
+            #echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+            #echo "Validation ID: $DEPLOY_ID"
+            echo "Validation deployment completed."
