@@ -4,7 +4,7 @@ on:
     branches: [ dev ] # Only run for PRs targetting dev
     types: [ closed ] # Only run when PR is closed (merged)
 jobs:
-  salesforce-code-analyzer-workflow:
+  salesforce-cd-workflow:
     permissions:
       pull-requests: write # Grants permission to create a pull request review. Only necessary if running against pull requests.
       contents: read # Grants permission to check out the repository. Only necessary for private repos.
@@ -42,9 +42,9 @@ jobs:
           # Generate delta package.xml using git diff
       - name: Generate Delta Package
         run: |
-          # Get the base branch (main/master)
-          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-          HEAD_BRANCH="${{ github.event.pull_request.head.sha }}"
+          # Get the base branch
+          #BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          #HEAD_BRANCH="${{ github.event.pull_request.head.sha }}"
           
           echo "Generating delta package between $BASE_BRANCH and $HEAD_BRANCH"
           
@@ -53,8 +53,8 @@ jobs:
           
           # Generate package.xml for changed components
           sf sgd:source:delta \
-            --to $HEAD_BRANCH \
-            --from origin/$BASE_BRANCH \
+            --to "HEAD" \
+            --from "HEAD~1" \
             --output-dir delta \
             --generate-delta
 
