@@ -125,17 +125,17 @@ jobs:
           echo "Starting validation deployment..."
           
           # Run validation with test execution
-          VALIDATION_RESULT=$(sf project deploy validate \
+          sf project deploy validate \
             --manifest delta/package/package.xml \
             --target-org target-org \
             --test-level RunLocalTests \
             --wait 30 \
-            --json)
+            --json --concise
 
           # Extract the 'id' field from the JSON output & Store the ID as a step output
-          DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
-          echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
-          echo "Validation ID: $DEPLOY_ID"
+          #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
+          #echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          #echo "Validation ID: $DEPLOY_ID"
           echo "Validation deployment completed."
 
       # Quick Deploy using Validation ID
@@ -144,7 +144,7 @@ jobs:
         run: |
           echo "Starting quick deployment using ID: ${{ steps.validate_step.outputs.validation_id }}"
           sf project deploy quick \
-            --deploy-id ${{ steps.validate_step.outputs.validation_id }} \
-            --target-org target-org \
+            #--deploy-id ${{ steps.validate_step.outputs.validation_id }} \
+            --target-org target-org --use-most-recent \
             --wait 30 \
             --verbose
