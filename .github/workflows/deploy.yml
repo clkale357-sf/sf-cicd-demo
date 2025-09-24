@@ -1,9 +1,8 @@
-name: Run Salesforce Code Analyzer
+name: Deploy to Salesforce
 on:
   pull_request:
-    branches: [ dev ] # Only run for PRs targeting OrgSource
-  push:
-    branches: [ dev ]
+    branches: [ dev ] # Only run for PRs targetting dev
+    types: [ closed ] # Only run when PR is closed (merged)
 jobs:
   salesforce-code-analyzer-workflow:
     permissions:
@@ -33,32 +32,8 @@ jobs:
           python-version: '>=3.10'
 
       - name: Install Salesforce CLI
-        run: npm install -g @salesforce/cli@latest
-
-      - name: Install Latest Salesforce Code Analyzer CLI Plugin
-        run: sf plugins install code-analyzer@latest
-
-      - name: Run Salesforce Code Analyzer
-        id: run-code-analyzer
-        uses: forcedotcom/run-code-analyzer@v2
-        with:
-          run-arguments: --workspace . --view detail --output-file sfca_results.html --output-file sfca_results.json
-          results-artifact-name: salesforce-code-analyzer-results
-          github-token: ${{ github.token }}
-
-      - name: Check the Outputs to Determine Whether to Fail
-        if: |
-          steps.run-code-analyzer.outputs.exit-code > 0 ||
-          steps.run-code-analyzer.outputs.num-sev1-violations > 0 ||
-          steps.run-code-analyzer.outputs.num-sev2-violations > 0 ||
-          steps.run-code-analyzer.outputs.num-violations > 10
-        run: exit 1
-
-      # Install SFDX Git Delta for package.xml generation
-      - name: Install SFDX Git Delta
-        run: |
-          echo y | sf plugins install sfdx-git-delta
-
+        run: npm install -g @salesforce/cli@latest  
+      
       # Create JWT key file from secret
       - name: Create JWT Key File
         run: |
@@ -79,67 +54,11 @@ jobs:
       # Verify authentication
       - name: Verify Authentication
         run: |
-          sf org display --target-org target-org
-
-      # Generate delta package.xml using git diff
-      - name: Generate Delta Package
-        run: |
-          # Get the base branch (main/master)
-          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-          HEAD_BRANCH="${{ github.event.pull_request.head.sha }}"
-          
-          echo "Generating delta package between $BASE_BRANCH and $HEAD_BRANCH"
-          
-          # Create delta directory
-          mkdir -p delta
-          
-          # Generate package.xml for changed components
-          sf sgd:source:delta \
-            --to $HEAD_BRANCH \
-            --from origin/$BASE_BRANCH \
-            --output-dir delta \
-            --generate-delta
-
-          # Display generated package.xml
-          echo "Generated package.xml:"
-          if [ -f "delta/package/package.xml" ]; then
-            cat delta/package/package.xml
-          else
-            echo "No package.xml generated"
-          fi
-          
-          # Check if there are any changes to deploy
-          if [ ! -f "delta/package/package.xml" ] || [ ! -s "delta/package/package.xml" ]; then
-            echo "No metadata changes detected"
-            echo "SKIP_DEPLOYMENT=true" >> $GITHUB_ENV
-          else
-            echo "SKIP_DEPLOYMENT=false" >> $GITHUB_ENV
-          fi
-
-      # Validate deployment (Check Only)
-      - name: Validate Deployment
-        id: validate_step # Assign an ID to this step to access its outputs
-        if: env.SKIP_DEPLOYMENT == 'false'
-        run: |
-          echo "Starting validation deployment..."
-          
-          # Run validation with test execution
-          sf project deploy validate \
-            --manifest delta/package/package.xml \
-            --target-org target-org \
-            --test-level RunLocalTests \
-            --wait 30 \
-            --json --concise
-
-          # Extract the 'id' field from the JSON output & Store the ID as a step output
-          #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
-          #echo "validation_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
-          #echo "Validation ID: $DEPLOY_ID"
-          echo "Validation deployment completed."
+          sf org display --target-org target-org      
 
       # Quick Deploy using Validation ID
       - name: Deploy to Target Org
-        if: success() && steps.validate_step.outputs.validation_id && github.event_name == 'push'
+        if: github.event.pull_request.merged == true
         run: |
           echo "Starting quick deployment using ID: ${{ steps.validate_step.outputs.validation_id }}"
           sf project deploy quick \
