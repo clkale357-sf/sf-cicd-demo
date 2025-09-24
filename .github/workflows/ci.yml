@@ -127,8 +127,8 @@ jobs:
             --target-org target-org \
             --test-level RunLocalTests \
             --wait 30 \
-            --json --concise)
-            
+            --json --concise
+
           # Extract the 'id' field from the JSON output & Store the ID as a step output
             #DEPLOY_ID=$(echo "$VALIDATION_RESULT" | jq -r '.result.id')
             # Store deploy ID in an artifact file
