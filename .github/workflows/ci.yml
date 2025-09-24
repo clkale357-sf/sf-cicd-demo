@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [ dev ] # Only run for PRs
 jobs:
-  salesforce-code-analyzer-workflow:
+  salesforce-ci-workflow:
     permissions:
       pull-requests: write # Grants permission to create a pull request review. Only necessary if running against pull requests.
       contents: read # Grants permission to check out the repository. Only necessary for private repos.
