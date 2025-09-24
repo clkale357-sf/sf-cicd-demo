@@ -1,0 +1,93 @@
+name: Deploy to Salesforce
+on:
+  pull_request:
+    branches: [ dev ] # Only run for PRs targeting OrgSource
+    types:
+      - closed
+jobs:
+  salesforce-code-analyzer-workflow:
+    permissions:
+      pull-requests: write # Grants permission to create a pull request review. Only necessary if running against pull requests.
+      contents: read # Grants permission to check out the repository. Only necessary for private repos.
+      actions: read # Grants permission to read the in-progress actions. Only necessary for private repos.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out files
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # PREREQUISITES - Only needed if the runner doesn't already satisfy these requirements.
+      - name: Ensure node v20.9.0 or greater
+        uses: actions/setup-node@v5
+        with:
+          node-version: '>=20.9.0'
+      - name: Ensure java v11 or greater
+        uses: actions/setup-java@v5
+        with:
+          java-version: '>=11'
+          distribution: 'zulu'
+      - name: Ensure python v3.10 or greater
+        uses: actions/setup-python@v6
+        with:
+          python-version: '>=3.10'
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli@latest
+
+      - name: Install Latest Salesforce Code Analyzer CLI Plugin
+        run: sf plugins install code-analyzer@latest
+
+      - name: Run Salesforce Code Analyzer
+        id: run-code-analyzer
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: --workspace . --view detail --output-file sfca_results.html --output-file sfca_results.json
+          results-artifact-name: salesforce-code-analyzer-results
+          github-token: ${{ github.token }}
+
+      - name: Check the Outputs to Determine Whether to Fail
+        if: |
+          steps.run-code-analyzer.outputs.exit-code > 0 ||
+          steps.run-code-analyzer.outputs.num-sev1-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-sev2-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-violations > 10
+        run: exit 1
+
+      # Install SFDX Git Delta for package.xml generation
+      - name: Install SFDX Git Delta
+        run: |
+          echo y | sf plugins install sfdx-git-delta
+
+      # Create JWT key file from secret
+      - name: Create JWT Key File
+        run: |
+          echo "${{ secrets.SF_JWT_KEY }}" > jwt-key.txt
+          chmod 600 jwt-key.txt
+
+      # Authenticate to Salesforce using JWT
+      - name: Authenticate to Salesforce
+        run: |
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CLIENT_ID }} \
+            --jwt-key-file jwt-key.txt \
+            --username ${{ secrets.SF_USERNAME }} \
+            --instance-url ${{ secrets.SF_INSTANCE_URL }} \
+            --alias target-org \
+            --set-default
+
+      # Verify authentication
+      - name: Verify Authentication
+        run: |
+          sf org display --target-org target-org      
+
+      # Quick Deploy using Validation ID
+      - name: Deploy to Target Org
+        if: github.event.pull_request.merged == true
+        run: |
+          echo "Starting quick deployment using ID: ${{ steps.validate_step.outputs.validation_id }}"
+          sf project deploy quick \
+            #--deploy-id ${{ steps.validate_step.outputs.validation_id }} \
+            --target-org target-org --use-most-recent \
+            --wait 30 \
+            --verbose
