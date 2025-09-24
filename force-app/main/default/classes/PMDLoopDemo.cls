@@ -9,7 +9,7 @@ public with sharing class PMDLoopDemo {
 
         // This loop iterates over each Account record.
 
-        //dummy update 2
+        //dummy update 3
         for (Account acc : triggerAccounts) {
 
             // BAD PRACTICE: SOQL query inside a for loop.
