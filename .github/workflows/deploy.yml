@@ -107,3 +107,4 @@ jobs:
             --target-org target-org\
             --wait 30 \
             --verbose
+            echo "Deployment succeeded."
