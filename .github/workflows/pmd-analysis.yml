@@ -3,8 +3,7 @@ on:
   pull_request:
     branches: [ dev ] # Only run for PRs targeting OrgSource
   push:
-    branches:
-      - dev
+    branches: [ dev ]
 jobs:
   salesforce-code-analyzer-workflow:
     permissions:
